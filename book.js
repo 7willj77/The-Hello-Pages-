@@ -1,5 +1,9 @@
 const totalPages = 12;
 let page = 1;
+const requestedPage = Number(new URLSearchParams(window.location.search).get("page"));
+if (Number.isFinite(requestedPage) && requestedPage >= 1 && requestedPage <= totalPages) {
+  page = requestedPage % 2 === 0 ? requestedPage - 1 : requestedPage;
+}
 const spread = document.getElementById("bookSpread");
 const number = document.getElementById("pageNumber");
 const prev = document.getElementById("prevBtn");
