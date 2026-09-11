@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Buy Space | The Hello Pages</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="topbar"><a class="logo" href="index.html"><span class="logo-dot">H</span><span><b>THE HELLO PAGES</b><small>Say hello. Get noticed.</small></span></a><nav><a href="index.html#book">Browse</a><a class="nav-button" href="advertise.html">BUY SPACE</a></nav></header>
+<main class="builder-main">
+  <div class="builder-heading"><div><p class="kicker">ADVERTISE</p><h1>Buy your piece<br>of the page.</h1></div><div class="total"><small id="summarySquares">0 squares</small><strong id="summaryPrice">£0.00</strong></div></div>
+  <section class="builder-card">
+    <div class="builder-step"><div class="step-title"><span>01</span><div><b>Choose your page</b><small>Premium pages are limited.</small></div></div><div id="pagePicker" class="page-picker"></div></div>
+    <div class="builder-step"><div class="step-title"><span>02</span><div><b>Choose your squares</b><small>Each square is 37 × 37 pixels at 96 DPI. Minimum purchase: 3.</small></div></div><div class="grid-scroll"><div id="adGrid" class="ad-grid"></div></div><div class="grid-legend"><span><i></i> Available</span><span><i class="yellow"></i> Your space</span><span><i class="grey"></i> Already sold</span></div></div>
+    <div class="builder-step"><div class="step-title"><span>03</span><div><b>Create your advert</b><small>We'll show you a preview before payment.</small></div></div>
+      <form id="advertForm">
+        <div class="fields">
+          <div><label>Business / name *</label><input id="business" required maxlength="60" placeholder="e.g. Southampton Plumbing"></div>
+          <div><label>Email *</label><input id="email" type="email" required placeholder="you@example.com"></div>
+          <div><label>Website</label><input id="website" type="url" placeholder="https://yourwebsite.co.uk"></div>
+          <div><label>Phone</label><input id="phone" type="tel" placeholder="01234 567890"></div>
+        </div>
+        <label>Short message</label><input id="tagline" maxlength="100" placeholder="What do you want people to know?">
+        <label>Advert image</label><input id="image" type="file" accept="image/png,image/jpeg,image/webp">
+        <div class="live-preview"><small>LIVE PREVIEW · PAGE <b id="previewPage">10</b></small><div id="advertPreview"><strong>Your Business</strong><span>Your advert will appear here.</span></div></div>
+        <div class="checkout-warning"><b>Prototype checkout</b><span>This version does not charge real money yet. Stripe will be connected in the production step.</span></div>
+        <button class="button dark full" type="submit">CONTINUE TO PAYMENT <span>→</span></button>
+      </form>
+    </div>
+  </section>
+</main>
+<footer><b>THE HELLO PAGES</b><span>© 2026 The Hello Pages</span><div><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a></div></footer>
+<script src="advertise.js"></script>
+</body>
+</html>

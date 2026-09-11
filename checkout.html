@@ -1,0 +1,11 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Checkout | The Hello Pages</title><link rel="stylesheet" href="style.css"></head><body>
+<header class="topbar"><a class="logo" href="index.html"><span class="logo-dot">H</span><span><b>THE HELLO PAGES</b><small>Say hello. Get noticed.</small></span></a></header>
+<main class="checkout-main"><div class="checkout-card"><p class="kicker">CHECKOUT</p><h1>One last hello.</h1><div id="order"></div><button id="pay" class="button dark full">PAY NOW · DEMO <span>→</span></button><p class="fine">Real Apple Pay / Google Pay / card payments will be connected through Stripe before launch.</p></div></main>
+<footer><b>THE HELLO PAGES</b><span>© 2026 The Hello Pages</span></footer>
+<script>
+const d=JSON.parse(localStorage.getItem("helloPagesPendingOrder")||"null"), order=document.getElementById("order"), pay=document.getElementById("pay");
+if(!d){order.innerHTML='<p>No pending advert. <a href="advertise.html"><b>Choose some space.</b></a></p>';pay.style.display="none";}
+else order.innerHTML='<div class="order"><small>PAGE '+d.page+'</small><h3>'+safe(d.business)+'</h3><p>'+d.squares.length+' squares × £'+(d.price/d.squares.length).toFixed(2)+'</p><strong>£'+d.price.toFixed(2)+'</strong></div>';
+pay.onclick=()=>{if(!d)return;localStorage.removeItem("helloPagesPendingOrder");document.querySelector(".checkout-card").innerHTML='<div class="success">✓</div><p class="kicker">DEMO ORDER COMPLETE</p><h1>Hello, '+safe(d.business)+'!</h1><p>Your advert has passed through the prototype checkout. In the live version, verified Stripe payment will automatically publish it.</p><a class="button dark" href="index.html">BACK TO THE BOOK →</a>'};
+function safe(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+</script></body></html>
