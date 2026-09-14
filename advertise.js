@@ -363,34 +363,24 @@ if (els.form) {
 
       if (advertError) throw advertError;
 
-      const advertRecord = Array.isArray(advert) ? advert[0] : advert;
+      /* The RPC returns both the advert and order IDs. */
+      const reservation = typeof advert === "string"
+        ? JSON.parse(advert)
+        : advert;
 
-      if (!advertRecord?.id) {
+      const advertId = reservation?.advert_id;
+      const orderId = reservation?.order_id;
+
+      if (!advertId || !orderId) {
+        console.error("Unexpected reservation response:", reservation);
         throw new Error("The advert reservation was not created.");
       }
-
-      /*
-       * The reservation RPC creates the advert. Create the pending order
-       * using the advert ID so checkout.html can hand it to Stripe.
-       */
-      const { data: order, error: orderError } = await supabaseClient
-        .from("orders")
-        .insert({
-          advert_id: advertRecord.id,
-          amount: total,
-          currency: "gbp",
-          status: "pending"
-        })
-        .select("id")
-        .single();
-
-      if (orderError) throw orderError;
 
       localStorage.setItem(
         "helloPagesPendingOrder",
         JSON.stringify({
-          orderId: order.id,
-          advertId: advertRecord.id,
+          orderId,
+          advertId,
           page: state.page,
           squares: selectedSquareIds,
           business,
