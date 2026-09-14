@@ -1,60 +1,243 @@
-const totalPages = 12;
+/* THE HELLO PAGES — 50 page directory viewer */
+
+const totalPages = 50;
 let page = 1;
+
 const requestedPage = Number(new URLSearchParams(window.location.search).get("page"));
 if (Number.isFinite(requestedPage) && requestedPage >= 1 && requestedPage <= totalPages) {
   page = requestedPage % 2 === 0 ? requestedPage - 1 : requestedPage;
 }
+
 const spread = document.getElementById("bookSpread");
 const number = document.getElementById("pageNumber");
 const prev = document.getElementById("prevBtn");
 const next = document.getElementById("nextBtn");
 
-const ads = [
-  ["SOUTH COAST PLUMBING","Reliable. Local. Professional.","023 8044 1234"],
-  ["COUNTRY JAI","Music · Events · Good Times","countryjai.co.uk"],
-  ["SOUTHAMPTON ELECTRICS","Domestic & Commercial","023 8055 7788"],
-  ["THE GARDEN GUYS","Garden Maintenance","07512 345678"],
-  ["SOLENT DRIVING SCHOOL","Learn with confidence.","solentdriving.co.uk"],
-  ["BEAUTY BY EMMA","Nails · Lashes · Beauty","beautybyemma.co.uk"],
-  ["SOUTH COAST PLASTERING","All aspects of plastering","Call 07890 123456"],
-  ["FITZONE GYM","Stronger Together","fitzonegym.co.uk"],
-  ["OCEAN VIEW HOLIDAYS","Holiday Rentals in Dorset","oceanviewholidays.co.uk"],
-  ["HELLO COFFEE","Great coffee. Greater days.","High Street, Southampton"],
-  ["THE DOG HOUSE","Pet care you can trust.","thedoghouse.co.uk"],
-  ["WILLS & CO","Local people. Local knowledge.","023 8033 6677"]
-];
+let houseAdverts = {};
 
-function rate(p){return p<=5?"£10":p<=9?"£5":"£1.50";}
-function tier(p){return p<=5?"PREMIUM":p<=9?"SEMI-PREMIUM":"STANDARD";}
+async function loadHouseAdverts() {
+  const { data, error } = await supabaseClient
+    .from("adverts")
+    .select("id, business_name, website, image_url, width_squares, height_squares, page_number")
+    .eq("status", "published")
+    .eq("payment_status", "paid")
+    .order("id", { ascending: true });
 
-function adCard(ad, className=""){
-  return `<article class="directory-ad ${className}">
-    <div class="ad-icon">${ad[0].slice(0,1)}</div>
-    <div><h3>${ad[0]}</h3><p>${ad[1]}</p><small>${ad[2]}</small></div>
-  </article>`;
+  if (error) {
+    console.error("Could not load House Adverts:", error);
+    return;
+  }
+
+  houseAdverts = {};
+
+  for (const ad of data || []) {
+    if (!houseAdverts[ad.page_number]) {
+      houseAdverts[ad.page_number] = [];
+    }
+
+    houseAdverts[ad.page_number].push({
+      name: ad.business_name,
+      image: ad.image_url,
+      url: ad.website,
+      width: ad.width_squares,
+      height: ad.height_squares,
+      size: `${ad.width_squares} × ${ad.height_squares}`
+    });
+  }
+
+  // Keep the larger advert first on pages containing more than one advert.
+  Object.values(houseAdverts).forEach(ads => {
+    ads.sort((a, b) => (b.width * b.height) - (a.width * a.height));
+  });
 }
 
-function renderPage(p, side){
-  const start = (p * 3) % ads.length;
-  const list = Array.from({length:6},(_,i)=>ads[(start+i)%ads.length]);
-  const large = p % 2 === 1 ? ads[(start+1)%ads.length] : ads[(start+4)%ads.length];
-  return `<div class="book-page ${side}">
-    <div class="page-heading"><span>THE HELLO PAGES</span><b>${p<=5?"SOUTHAMPTON & SURROUNDING AREAS":"LOCAL BUSINESSES. A BIGGER HELLO."}</b></div>
-    ${side==="left" ? `<div class="feature-ad yellow-ad"><div><h2>${large[0]}</h2><p>${large[1]}</p><ul><li>Professional service</li><li>Local &amp; reliable</li><li>Call today</li></ul><strong>${large[2]}</strong></div><div class="feature-mark">✦</div></div>
-    <div class="feature-ad dark-ad"><div><h2>WILLS &amp; CO</h2><p>ESTATE AGENTS</p><span>SALES · LETTINGS · PROPERTY MANAGEMENT</span><small>Local people. Local knowledge.</small></div><div class="house-mark">⌂</div></div>` : `<div class="small-ad-grid">${list.map((a,i)=>adCard(a,i===2?"highlight":"")).join("")}</div>`}
-    ${side==="left" ? `<div class="bottom-ad-row">${adCard(ads[(start+3)%ads.length])}${adCard(ads[(start+5)%ads.length])}</div>` : ""}
-    <div class="page-footer"><span>THEHELLOPAGES.CO.UK</span><b>${p}</b><span>${tier(p)} · ${rate(p)} / SQUARE</span></div>
-  </div>`;
+const pricing = pageNumber => {
+  if (pageNumber <= 2) return { name: "LANDING", price: "£25" };
+  if (pageNumber <= 8) return { name: "PREMIUM", price: "£12.50" };
+  if (pageNumber <= 14) return { name: "SEMI-PREMIUM", price: "£7" };
+  return { name: "STANDARD", price: "£2" };
+};
+
+function houseAd(ad, className = "") {
+  const localImages = {
+    "JJS Music": "assets/house-adverts/jjs-music.jpg",
+    "Country Jai": "assets/house-adverts/country-jai.jpg",
+    "The Card Society": "assets/house-adverts/card-society.jpg",
+    "Zee by the Sea": "assets/house-adverts/zee-by-the-sea.jpg"
+  };
+
+  const image = localImages[ad.name] || ad.image;
+
+  return `
+    <a
+      class="house-ad ${className}"
+      href="${ad.url || "#"}"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="${ad.name}"
+    >
+      <img src="${image}" alt="${ad.name}">
+    </a>
+  `;
 }
 
-function render(){
+function emptySpace(label = "YOUR BUSINESS COULD BE HERE") {
+  return `
+    <div class="book-placeholder">
+      <span>${label}</span>
+    </div>
+  `;
+}
+
+function renderPage(p, side) {
+  const tier = pricing(p);
+  const ads = houseAdverts[p] || [];
+  const landing = p <= 2;
+
+  let content = "";
+
+  if (p === 1) {
+    content = `
+      <div class="house-layout house-layout-large">
+        ${houseAd(ads[0], "house-ad-large")}
+        ${emptySpace("YOUR BUSINESS COULD BE HERE")}
+      </div>
+    `;
+  } else if (p === 2) {
+    content = `
+      <div class="house-layout page-two-layout">
+        ${houseAd(ads[0], "house-ad-large")}
+        ${houseAd(ads[1], "house-ad-small")}
+      </div>
+    `;
+  } else if (p === 4) {
+    content = `
+      <div class="house-layout house-layout-small">
+        ${houseAd(ads[0], "house-ad-small")}
+        ${emptySpace("YOUR BUSINESS COULD BE HERE")}
+      </div>
+    `;
+  } else {
+    content = `
+      <div class="directory-empty">
+        <strong>THE HELLO PAGES</strong>
+        <span>${tier.name} DIRECTORY SPACE</span>
+        <p>Be one of the businesses making a bigger hello.</p>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="book-page ${side} ${landing ? "landing-page" : ""}">
+      <div class="page-heading">
+        <span>THE HELLO PAGES</span>
+        <b>${landing ? "THE UK'S DIGITAL BUSINESS DIRECTORY" : "LOCAL BUSINESSES. A BIGGER HELLO."}</b>
+        <em>PAGE ${p}</em>
+      </div>
+
+      ${content}
+
+      <div class="page-footer">
+        <span>${tier.name} · ${tier.price} / SQUARE</span>
+        <b>${p}</b>
+        <span>THEHELLOPAGES.CO.UK</span>
+      </div>
+    </div>
+  `;
+}
+
+function render() {
   const left = page;
   const right = page + 1;
-  spread.innerHTML = renderPage(left,"left") + (right<=totalPages ? renderPage(right,"right") : `<div class="book-page right blank-page"></div>`);
-  number.textContent = `${left}–${right<=totalPages?right:left}`;
-  prev.disabled = page===1;
-  next.disabled = page>=totalPages-1;
+
+  spread.innerHTML =
+    renderPage(left, "left") +
+    (right <= totalPages
+      ? renderPage(right, "right")
+      : `<div class="book-page right blank-page"></div>`);
+
+  number.textContent =
+    `${left}–${right <= totalPages ? right : left} / ${totalPages}`;
+
+  prev.disabled = page === 1;
+  next.disabled = page >= totalPages - 1;
 }
-prev.onclick=()=>{if(page>1){page=Math.max(1,page-2);render();}};
-next.onclick=()=>{if(page<totalPages-1){page=Math.min(totalPages-1,page+2);render();}};
-render();
+
+prev.onclick = () => {
+  if (page > 1) {
+    page = Math.max(1, page - 2);
+    render();
+  }
+};
+
+next.onclick = () => {
+  if (page < totalPages - 1) {
+    page = Math.min(totalPages - 1, page + 2);
+    render();
+  }
+};
+
+loadHouseAdverts().then(() => {
+  render();
+});
+
+/* Single House Advert hover preview */
+let housePreview = null;
+
+document.addEventListener("mouseenter", event => {
+  const ad = event.target.closest(".house-ad");
+  if (!ad) return;
+
+  const image = ad.querySelector("img");
+  if (!image) return;
+
+  if (housePreview) {
+    housePreview.remove();
+  }
+
+  housePreview = document.createElement("div");
+  housePreview.className = "house-ad-preview";
+
+  const previewImage = document.createElement("img");
+  previewImage.src = image.src;
+  previewImage.alt = image.alt || "";
+
+  housePreview.appendChild(previewImage);
+  document.body.appendChild(housePreview);
+
+  requestAnimationFrame(() => {
+    housePreview.classList.add("visible");
+  });
+}, true);
+
+document.addEventListener("mouseleave", event => {
+  const ad = event.target.closest(".house-ad");
+  if (!ad) return;
+
+  if (housePreview) {
+    housePreview.remove();
+    housePreview = null;
+  }
+}, true);
+
+document.addEventListener("mousemove", event => {
+  if (!housePreview) return;
+
+  const offset = 18;
+  const previewWidth = housePreview.offsetWidth;
+  const previewHeight = housePreview.offsetHeight;
+
+  let x = event.clientX + offset;
+  let y = event.clientY + offset;
+
+  if (x + previewWidth > window.innerWidth - 10) {
+    x = event.clientX - previewWidth - offset;
+  }
+
+  if (y + previewHeight > window.innerHeight - 10) {
+    y = event.clientY - previewHeight - offset;
+  }
+
+  housePreview.style.left = `${Math.max(10, x)}px`;
+  housePreview.style.top = `${Math.max(10, y)}px`;
+});
