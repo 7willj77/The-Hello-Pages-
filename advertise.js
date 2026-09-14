@@ -270,19 +270,141 @@ if (els.form) {
     input.addEventListener("input", updateSummary);
   });
 
-  els.form.addEventListener("submit", event => {
+  els.form.addEventListener("submit", async event => {
     event.preventDefault();
+
     const count = state.selected.size;
+
     if (count < MIN_SQUARES) {
       alert(`Please select at least ${MIN_SQUARES} squares.`);
       return;
     }
 
-    // This is deliberately a front-end hand-off for now.
-    // Stripe Checkout will replace this alert once Supabase + Stripe are connected.
-    const tier = tierFor(state.page);
-    const total = count * tier.price;
-    alert(`READY FOR CHECKOUT\n\nPage: ${state.page}\nSpace: ${count} squares\nRate: ${money(tier.price)} per square\nTotal: ${money(total)}\n\nNext step: Stripe Checkout + Supabase inventory.`);
+    const formData = new FormData(els.form);
+
+    const business = String(formData.get("business") || "").trim();
+    const email = String(formData.get("email") || "").trim();
+    const website = String(formData.get("website") || "").trim();
+    const telephone = String(formData.get("telephone") || "").trim();
+    const tagline = String(formData.get("tagline") || "").trim();
+
+    if (!business || !email) {
+      alert("Please enter your business name and email address.");
+      return;
+    }
+
+    if (typeof supabaseClient === "undefined") {
+      alert("Payment system is unavailable. Please refresh the page and try again.");
+      return;
+    }
+
+    const submitButtons = els.form.querySelectorAll('button[type="submit"]');
+
+    submitButtons.forEach(button => {
+      button.disabled = true;
+      button.dataset.originalText = button.innerHTML;
+      button.innerHTML = "RESERVING SPACE…";
+    });
+
+    try {
+      /* Get the real Supabase square IDs for the selected page. */
+      const { data: squareRows, error: squareError } = await supabaseClient
+        .from("squares")
+        .select("id,row_number,column_number")
+        .eq("page_number", state.page);
+
+      if (squareError) throw squareError;
+
+      const selectedRows = [...state.selected].map(rowCol);
+
+      const selectedSquareIds = selectedRows.map(({ row, col }) => {
+        const match = squareRows.find(
+          square =>
+            Number(square.row_number) === row &&
+            Number(square.column_number) === col
+        );
+
+        return match ? match.id : null;
+      });
+
+      if (selectedSquareIds.some(id => id === null)) {
+        throw new Error("One or more selected spaces could not be found.");
+      }
+
+      const tier = tierFor(state.page);
+      const total = count * tier.price;
+
+      const now = Date.now();
+      const reservedUntil = new Date(now + 30 * 60 * 1000).toISOString();
+
+      /* Create the advert and reserve its squares atomically. */
+      const { data: advert, error: advertError } = await supabaseClient.rpc(
+        "create_advert_reservation",
+        {
+          p_business_name: business,
+          p_email: email,
+          p_website: website || null,
+          p_telephone: telephone || null,
+          p_tagline: tagline || null,
+          p_page_number: state.page,
+          p_square_ids: selectedSquareIds,
+          p_reserved_until: reservedUntil
+        }
+      );
+
+      if (advertError) throw advertError;
+
+      const advertRecord = Array.isArray(advert) ? advert[0] : advert;
+
+      if (!advertRecord?.id) {
+        throw new Error("The advert reservation was not created.");
+      }
+
+      /*
+       * The reservation RPC creates the advert. Create the pending order
+       * using the advert ID so checkout.html can hand it to Stripe.
+       */
+      const { data: order, error: orderError } = await supabaseClient
+        .from("orders")
+        .insert({
+          advert_id: advertRecord.id,
+          amount: total,
+          currency: "gbp",
+          status: "pending"
+        })
+        .select("id")
+        .single();
+
+      if (orderError) throw orderError;
+
+      localStorage.setItem(
+        "helloPagesPendingOrder",
+        JSON.stringify({
+          orderId: order.id,
+          advertId: advertRecord.id,
+          page: state.page,
+          squares: selectedSquareIds,
+          business,
+          email,
+          price: total
+        })
+      );
+
+      window.location.href = "checkout.html";
+
+    } catch (error) {
+      console.error("Hello Pages reservation error:", error);
+
+      alert(
+        error?.message ||
+        "We couldn't reserve those spaces. Please try again."
+      );
+
+      submitButtons.forEach(button => {
+        button.disabled = false;
+        button.innerHTML = button.dataset.originalText || "CONTINUE TO PAYMENT";
+      });
+    }
   });
 }
 
