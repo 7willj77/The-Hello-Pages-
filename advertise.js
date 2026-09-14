@@ -266,6 +266,15 @@ function escapeHtml(value) {
 }
 
 if (els.form) {
+  const stickyCheckout = document.querySelector(".sticky-checkout");
+
+  if (stickyCheckout) {
+    stickyCheckout.addEventListener("click", () => {
+      els.form.requestSubmit();
+    });
+  }
+
+
   els.form.querySelectorAll("input").forEach(input => {
     input.addEventListener("input", updateSummary);
   });

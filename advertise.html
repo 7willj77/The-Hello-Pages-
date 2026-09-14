@@ -56,13 +56,13 @@
       <div class="step-heading"><span>03</span><div><h2>Tell us about your business</h2><p>Your details and advert are used to prepare your listing.</p></div></div>
       <form id="advertForm">
         <div class="form-grid">
-          <div class="field"><label for="business">Business / name *</label><input id="business" required maxlength="60" placeholder="e.g. Southampton Plumbing"></div>
-          <div class="field"><label for="email">Email address *</label><input id="email" type="email" required placeholder="you@example.com"></div>
-          <div class="field"><label for="website">Website</label><input id="website" type="text" inputmode="url" placeholder="https://yourwebsite.co.uk"></div>
-          <div class="field"><label for="phone">Telephone</label><input id="phone" type="tel" placeholder="023 8000 0000"></div>
+          <div class="field"><label for="business">Business / name *</label><input id="business" name="business" required maxlength="60" placeholder="e.g. Southampton Plumbing"></div>
+          <div class="field"><label for="email">Email address *</label><input id="email" name="email" type="email" required placeholder="you@example.com"></div>
+          <div class="field"><label for="website">Website</label><input id="website" name="website" type="text" inputmode="url" placeholder="https://yourwebsite.co.uk"></div>
+          <div class="field"><label for="phone">Telephone</label><input id="phone" name="telephone" type="tel" placeholder="023 8000 0000"></div>
         </div>
-        <div class="field"><label for="tagline">Short message</label><input id="tagline" maxlength="100" placeholder="A short line about your business"></div>
-        <div class="field"><label for="image">Advert image</label><input id="image" type="file" accept="image/png,image/jpeg,image/webp"><small id="uploadDimensions">Select your space above to see the required image size.</small></div>
+        <div class="field"><label for="tagline">Short message</label><input id="tagline" name="tagline" maxlength="100" placeholder="A short line about your business"></div>
+        <div class="field"><label for="image">Advert image</label><input id="image" name="image" type="file" accept="image/png,image/jpeg,image/webp"><small id="uploadDimensions">Select your space above to see the required image size.</small></div>
 
         <div class="preview-heading"><span>LIVE PREVIEW</span><b>PAGE <i id="previewPage">10</i></b></div>
         <div id="advertPreview" class="advert-preview"><strong>Your Business</strong><span>Your advert will appear here.</span></div>
