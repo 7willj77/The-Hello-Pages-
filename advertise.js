@@ -16,7 +16,7 @@ const TIERS = [
 ];
 
 const state = {
-  page: 15,
+  page: 1,
   selected: new Set(),
   dragging: false,
   dragStart: null,
