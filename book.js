@@ -30,27 +30,69 @@ async function loadAdverts() {
   }
 
   const published = adverts || [];
-  const ids = published.map(ad => ad.id);
 
-  let squares = [];
+  const houseNames = [
+    "JJS Music",
+    "Country Jai",
+    "The Card Society",
+    "Zee by the Sea"
+  ];
 
-  if (ids.length) {
-    const { data, error } = await supabaseClient
-      .from("squares")
-      .select("id, advert_id, page_number, row_number, column_number")
-      .in("advert_id", ids);
+  houseAdverts = {};
+  customerAdverts = {};
 
-    if (error) {
-      console.error("Could not load advert square positions:", error);
-      return;
+  /*
+   * House Adverts deliberately use their stored dimensions, exactly as
+   * the original working directory did. They do not depend on square
+   * position records.
+   */
+  for (const ad of published) {
+    if (!houseNames.includes(ad.business_name)) continue;
+
+    if (!houseAdverts[ad.page_number]) {
+      houseAdverts[ad.page_number] = [];
     }
 
-    squares = data || [];
+    houseAdverts[ad.page_number].push({
+      id: ad.id,
+      name: ad.business_name,
+      image: ad.image_url,
+      url: ad.website,
+      width: Number(ad.width_squares),
+      height: Number(ad.height_squares),
+      size: `${ad.width_squares} × ${ad.height_squares}`
+    });
+  }
+
+  Object.values(houseAdverts).forEach(ads => {
+    ads.sort((a, b) => (b.width * b.height) - (a.width * a.height));
+  });
+
+  /*
+   * Customer adverts use their actual reserved square positions so they
+   * can be rendered in the correct place in the 15 × 10 directory grid.
+   */
+  const customerPublished = published.filter(
+    ad => !houseNames.includes(ad.business_name)
+  );
+
+  if (!customerPublished.length) return;
+
+  const ids = customerPublished.map(ad => ad.id);
+
+  const { data: squares, error: squareError } = await supabaseClient
+    .from("squares")
+    .select("id, advert_id, page_number, row_number, column_number")
+    .in("advert_id", ids);
+
+  if (squareError) {
+    console.error("Could not load customer advert square positions:", squareError);
+    return;
   }
 
   const positions = {};
 
-  for (const square of squares) {
+  for (const square of squares || []) {
     if (!positions[square.advert_id]) {
       positions[square.advert_id] = [];
     }
@@ -58,10 +100,7 @@ async function loadAdverts() {
     positions[square.advert_id].push(square);
   }
 
-  houseAdverts = {};
-  customerAdverts = {};
-
-  for (const ad of published) {
+  for (const ad of customerPublished) {
     const adSquares = positions[ad.id] || [];
 
     if (!adSquares.length) continue;
@@ -73,6 +112,13 @@ async function loadAdverts() {
     const maxRow = Math.max(...rows);
     const minCol = Math.min(...cols);
     const maxCol = Math.max(...cols);
+
+    if (
+      maxRow - minRow + 1 !== Number(ad.height_squares) ||
+      maxCol - minCol + 1 !== Number(ad.width_squares)
+    ) {
+      console.warn("Customer advert dimensions differ from stored square positions:", ad.business_name);
+    }
 
     const advert = {
       id: ad.id,
@@ -89,31 +135,13 @@ async function loadAdverts() {
       size: `${maxCol - minCol + 1} × ${maxRow - minRow + 1}`
     };
 
-    const houseNames = [
-      "JJS Music",
-      "Country Jai",
-      "The Card Society",
-      "Zee by the Sea"
-    ];
-
-    if (houseNames.includes(ad.business_name)) {
-      if (!houseAdverts[ad.page_number]) {
-        houseAdverts[ad.page_number] = [];
-      }
-      houseAdverts[ad.page_number].push(advert);
-    } else {
-      if (!customerAdverts[ad.page_number]) {
-        customerAdverts[ad.page_number] = [];
-      }
-      customerAdverts[ad.page_number].push(advert);
+    if (!customerAdverts[ad.page_number]) {
+      customerAdverts[ad.page_number] = [];
     }
+
+    customerAdverts[ad.page_number].push(advert);
   }
-
-  Object.values(houseAdverts).forEach(ads => {
-    ads.sort((a, b) => (b.width * b.height) - (a.width * a.height));
-  });
 }
-
 const pricing = pageNumber => {
   if (pageNumber <= 2) return { name: "LANDING", price: "£25" };
   if (pageNumber <= 8) return { name: "PREMIUM", price: "£12.50" };

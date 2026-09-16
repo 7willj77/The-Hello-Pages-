@@ -1,12 +1,25 @@
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://thehellopages.co.uk",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-};
+const allowedOrigins = [
+  "https://thehellopages.co.uk",
+  "https://super-duper-train-74v55x5xrq9fpxgv-8000.app.github.dev",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("Origin") || "";
+  const allowedOrigin = allowedOrigins.includes(origin)
+    ? origin
+    : "https://thehellopages.co.uk";
+
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Vary": "Origin",
+  };
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: getCorsHeaders(req) });
   }
 
   try {
@@ -15,7 +28,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Method not allowed" }),
         {
           status: 405,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
         }
       );
     }
@@ -27,7 +40,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Authentication required" }),
         {
           status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
         }
       );
     }
@@ -57,7 +70,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Invalid or expired authentication" }),
         {
           status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
         }
       );
     }
@@ -71,7 +84,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Authenticated email address not found" }),
         {
           status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
         }
       );
     }
@@ -81,7 +94,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Please confirm your email address before managing your advert" }),
         {
           status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
         }
       );
     }
@@ -110,7 +123,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Unable to load your adverts" }),
         {
           status: 502,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
         }
       );
     }
@@ -165,7 +178,7 @@ Deno.serve(async (req) => {
       }),
       {
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       }
     );
   } catch (error) {
@@ -175,7 +188,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ error: "Unable to load customer adverts" }),
       {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       }
     );
   }
