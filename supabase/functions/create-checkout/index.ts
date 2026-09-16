@@ -1,7 +1,20 @@
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "https://thehellopages.co.uk",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   try {
     if (req.method !== "POST") {
-      return new Response("Method not allowed", { status: 405 });
+      return new Response("Method not allowed", {
+        status: 405,
+        headers: corsHeaders,
+      });
     }
 
     const { orderId, advertId } = await req.json();
@@ -11,7 +24,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Missing orderId or advertId" }),
         {
           status: 400,
-          headers: { "Content-Type": "application/json" },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
@@ -49,7 +62,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Unable to verify order" }),
         {
           status: 502,
-          headers: { "Content-Type": "application/json" },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
@@ -62,7 +75,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Order not found" }),
         {
           status: 404,
-          headers: { "Content-Type": "application/json" },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
@@ -72,7 +85,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Order is no longer payable" }),
         {
           status: 409,
-          headers: { "Content-Type": "application/json" },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
@@ -86,7 +99,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Advert reservation is no longer active" }),
         {
           status: 409,
-          headers: { "Content-Type": "application/json" },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
@@ -154,7 +167,7 @@ Deno.serve(async (req) => {
         }),
         {
           status: 502,
-          headers: { "Content-Type": "application/json" },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
@@ -184,7 +197,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ url: stripeData.url }),
       {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   } catch (error) {
@@ -194,7 +207,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ error: "Unable to create checkout session" }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   }

@@ -14,38 +14,101 @@ const prev = document.getElementById("prevBtn");
 const next = document.getElementById("nextBtn");
 
 let houseAdverts = {};
+let customerAdverts = {};
 
-async function loadHouseAdverts() {
-  const { data, error } = await supabaseClient
+async function loadAdverts() {
+  const { data: adverts, error: advertError } = await supabaseClient
     .from("adverts")
-    .select("id, business_name, website, image_url, width_squares, height_squares, page_number")
+    .select("id, business_name, website, telephone, tagline, image_url, width_squares, height_squares, page_number")
     .eq("status", "published")
     .eq("payment_status", "paid")
-    .order("id", { ascending: true });
+    .order("created_at", { ascending: true });
 
-  if (error) {
-    console.error("Could not load House Adverts:", error);
+  if (advertError) {
+    console.error("Could not load published adverts:", advertError);
     return;
   }
 
-  houseAdverts = {};
+  const published = adverts || [];
+  const ids = published.map(ad => ad.id);
 
-  for (const ad of data || []) {
-    if (!houseAdverts[ad.page_number]) {
-      houseAdverts[ad.page_number] = [];
+  let squares = [];
+
+  if (ids.length) {
+    const { data, error } = await supabaseClient
+      .from("squares")
+      .select("id, advert_id, page_number, row_number, column_number")
+      .in("advert_id", ids);
+
+    if (error) {
+      console.error("Could not load advert square positions:", error);
+      return;
     }
 
-    houseAdverts[ad.page_number].push({
-      name: ad.business_name,
-      image: ad.image_url,
-      url: ad.website,
-      width: ad.width_squares,
-      height: ad.height_squares,
-      size: `${ad.width_squares} × ${ad.height_squares}`
-    });
+    squares = data || [];
   }
 
-  // Keep the larger advert first on pages containing more than one advert.
+  const positions = {};
+
+  for (const square of squares) {
+    if (!positions[square.advert_id]) {
+      positions[square.advert_id] = [];
+    }
+
+    positions[square.advert_id].push(square);
+  }
+
+  houseAdverts = {};
+  customerAdverts = {};
+
+  for (const ad of published) {
+    const adSquares = positions[ad.id] || [];
+
+    if (!adSquares.length) continue;
+
+    const rows = adSquares.map(s => Number(s.row_number));
+    const cols = adSquares.map(s => Number(s.column_number));
+
+    const minRow = Math.min(...rows);
+    const maxRow = Math.max(...rows);
+    const minCol = Math.min(...cols);
+    const maxCol = Math.max(...cols);
+
+    const advert = {
+      id: ad.id,
+      name: ad.business_name,
+      website: ad.website,
+      url: ad.website,
+      telephone: ad.telephone,
+      tagline: ad.tagline,
+      image: ad.image_url,
+      width: maxCol - minCol + 1,
+      height: maxRow - minRow + 1,
+      row: minRow,
+      col: minCol,
+      size: `${maxCol - minCol + 1} × ${maxRow - minRow + 1}`
+    };
+
+    const houseNames = [
+      "JJS Music",
+      "Country Jai",
+      "The Card Society",
+      "Zee by the Sea"
+    ];
+
+    if (houseNames.includes(ad.business_name)) {
+      if (!houseAdverts[ad.page_number]) {
+        houseAdverts[ad.page_number] = [];
+      }
+      houseAdverts[ad.page_number].push(advert);
+    } else {
+      if (!customerAdverts[ad.page_number]) {
+        customerAdverts[ad.page_number] = [];
+      }
+      customerAdverts[ad.page_number].push(advert);
+    }
+  }
+
   Object.values(houseAdverts).forEach(ads => {
     ads.sort((a, b) => (b.width * b.height) - (a.width * a.height));
   });
@@ -59,6 +122,8 @@ const pricing = pageNumber => {
 };
 
 function houseAd(ad, className = "") {
+  if (!ad) return "";
+
   const localImages = {
     "JJS Music": "assets/house-adverts/jjs-music.jpg",
     "Country Jai": "assets/house-adverts/country-jai.jpg",
@@ -85,6 +150,47 @@ function emptySpace(label = "YOUR BUSINESS COULD BE HERE") {
   return `
     <div class="book-placeholder">
       <span>${label}</span>
+    </div>
+  `;
+}
+
+function customerAd(ad) {
+  const style = `
+    grid-column: ${ad.col + 1} / span ${ad.width};
+    grid-row: ${ad.row + 1} / span ${ad.height};
+  `;
+
+  const inner = ad.image
+    ? `<img src="${ad.image}" alt="${ad.name}">`
+    : `
+      <div class="customer-ad-text">
+        <strong>${ad.name}</strong>
+        ${ad.tagline ? `<span>${ad.tagline}</span>` : ""}
+        ${ad.telephone ? `<small>${ad.telephone}</small>` : ""}
+        ${ad.website ? `<small>${ad.website.replace(/^https?:\/\//, "")}</small>` : ""}
+      </div>
+    `;
+
+  return `
+    <a
+      class="customer-ad"
+      style="${style}"
+      href="${ad.website || "#"}"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="${ad.name}"
+    >
+      ${inner}
+    </a>
+  `;
+}
+
+function customerDirectory(p) {
+  const ads = customerAdverts[p] || [];
+
+  return `
+    <div class="customer-directory">
+      ${ads.map(customerAd).join("")}
     </div>
   `;
 }
@@ -118,13 +224,17 @@ function renderPage(p, side) {
       </div>
     `;
   } else {
-    content = `
-      <div class="directory-empty">
-        <strong>THE HELLO PAGES</strong>
-        <span>${tier.name} DIRECTORY SPACE</span>
-        <p>Be one of the businesses making a bigger hello.</p>
-      </div>
-    `;
+    const customerAds = customerAdverts[p] || [];
+
+    content = customerAds.length
+      ? customerDirectory(p)
+      : `
+        <div class="directory-empty">
+          <strong>THE HELLO PAGES</strong>
+          <span>${tier.name} DIRECTORY SPACE</span>
+          <p>Be one of the businesses making a bigger hello.</p>
+        </div>
+      `;
   }
 
   return `
@@ -177,7 +287,7 @@ next.onclick = () => {
   }
 };
 
-loadHouseAdverts().then(() => {
+loadAdverts().then(() => {
   render();
 });
 
