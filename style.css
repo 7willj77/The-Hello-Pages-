@@ -718,3 +718,18 @@ footer{padding:25px 7vw;border-top:1px solid var(--line);display:flex;justify-co
     gap: 2px;
   }
 }
+
+/* MOBILE BOOK — single page view */
+@media (max-width: 900px) {
+  .book-spread {
+    grid-template-columns: 1fr;
+  }
+
+  .book-spine {
+    display: none;
+  }
+
+  .book-page.left {
+    box-shadow: none;
+  }
+}

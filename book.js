@@ -2,6 +2,7 @@
 
 const totalPages = 50;
 let page = 1;
+let mobilePage = 1;
 
 const requestedPage = Number(new URLSearchParams(window.location.search).get("page"));
 if (Number.isFinite(requestedPage) && requestedPage >= 1 && requestedPage <= totalPages) {
@@ -284,7 +285,19 @@ function renderPage(p, side) {
   `;
 }
 
+function isMobileBook() {
+  return window.matchMedia("(max-width: 900px)").matches;
+}
+
 function render() {
+  if (isMobileBook()) {
+    spread.innerHTML = renderPage(mobilePage, "left");
+    number.textContent = `${mobilePage} / ${totalPages}`;
+    prev.disabled = mobilePage === 1;
+    next.disabled = mobilePage === totalPages;
+    return;
+  }
+
   const left = page;
   const right = page + 1;
 
@@ -302,6 +315,14 @@ function render() {
 }
 
 prev.onclick = () => {
+  if (isMobileBook()) {
+    if (mobilePage > 1) {
+      mobilePage--;
+      render();
+    }
+    return;
+  }
+
   if (page > 1) {
     page = Math.max(1, page - 2);
     render();
@@ -309,11 +330,23 @@ prev.onclick = () => {
 };
 
 next.onclick = () => {
+  if (isMobileBook()) {
+    if (mobilePage < totalPages) {
+      mobilePage++;
+      render();
+    }
+    return;
+  }
+
   if (page < totalPages - 1) {
     page = Math.min(totalPages - 1, page + 2);
     render();
   }
 };
+
+window.addEventListener("resize", () => {
+  render();
+});
 
 loadAdverts().then(() => {
   render();
@@ -323,7 +356,7 @@ loadAdverts().then(() => {
 let housePreview = null;
 
 document.addEventListener("mouseenter", event => {
-  const ad = event.target.closest(".house-ad");
+  const ad = event.target instanceof Element ? event.target.closest(".house-ad") : null;
   if (!ad) return;
 
   const image = ad.querySelector("img");
@@ -349,7 +382,7 @@ document.addEventListener("mouseenter", event => {
 }, true);
 
 document.addEventListener("mouseleave", event => {
-  const ad = event.target.closest(".house-ad");
+  const ad = event.target instanceof Element ? event.target.closest(".house-ad") : null;
   if (!ad) return;
 
   if (housePreview) {
