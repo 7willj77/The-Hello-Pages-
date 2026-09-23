@@ -677,6 +677,8 @@ freeHelloForm.addEventListener("submit", async event => {
       throw new Error("Please sign in again.");
     }
 
+    const imageUrl = await uploadFreeHelloImage(session);
+
     const payload = {
       business_name: document.getElementById("freeHelloBusinessName").value.trim(),
       customer_email: document.getElementById("freeHelloCustomerEmail").value.trim(),
@@ -684,7 +686,7 @@ freeHelloForm.addEventListener("submit", async event => {
       website: document.getElementById("freeHelloWebsite").value.trim(),
       telephone: document.getElementById("freeHelloTelephone").value.trim(),
       tagline: document.getElementById("freeHelloTagline").value.trim(),
-      image_url: document.getElementById("freeHelloImageUrl").value.trim(),
+      image_url: imageUrl,
       page_number: pageNumber,
       square_ids: selectedSquares.map(square => Number(square.id)),
     };
@@ -733,3 +735,152 @@ freeHelloForm.addEventListener("submit", async event => {
     publishFreeHelloButton.disabled = false;
   }
 });
+
+const freeHelloImageFile = document.getElementById("freeHelloImageFile");
+const freeHelloImageStatus = document.getElementById("freeHelloImageStatus");
+const freeHelloImagePreview = document.getElementById("freeHelloImagePreview");
+
+let freeHelloImageObjectUrl = null;
+let freeHelloImageValid = false;
+
+if (freeHelloImageFile) {
+  freeHelloImageFile.addEventListener("change", () => {
+    const file = freeHelloImageFile.files?.[0];
+
+    freeHelloImageValid = false;
+
+    if (freeHelloImageObjectUrl) {
+      URL.revokeObjectURL(freeHelloImageObjectUrl);
+      freeHelloImageObjectUrl = null;
+    }
+
+    if (!file) {
+      freeHelloImageStatus.textContent =
+        "Upload JPG, PNG or WebP artwork.";
+      freeHelloImagePreview.style.display = "none";
+      return;
+    }
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      freeHelloImageStatus.textContent =
+        "✕ Please upload a JPG, PNG or WebP image.";
+      freeHelloImagePreview.style.display = "none";
+      freeHelloImageFile.value = "";
+      return;
+    }
+
+    const pageNumber = Number(freeHelloPage.value);
+
+    if (!pageNumber || !freeHelloSelectedIds.size) {
+      freeHelloImageStatus.textContent =
+        "Choose your page and advertising space first.";
+      freeHelloImagePreview.style.display = "none";
+      return;
+    }
+
+    const selected = freeHelloSquares.filter(square =>
+      freeHelloSelectedIds.has(String(square.id))
+    );
+
+    if (!selected.length) {
+      freeHelloImageStatus.textContent =
+        "Choose your advertising space first.";
+      freeHelloImagePreview.style.display = "none";
+      return;
+    }
+
+    const rows = selected.map(square => Number(square.row_number));
+    const cols = selected.map(square => Number(square.column_number));
+
+    const widthSquares =
+      Math.max(...cols) - Math.min(...cols) + 1;
+
+    const heightSquares =
+      Math.max(...rows) - Math.min(...rows) + 1;
+
+    const requiredWidth = widthSquares * 37;
+    const requiredHeight = heightSquares * 37;
+
+    const objectUrl = URL.createObjectURL(file);
+    freeHelloImageObjectUrl = objectUrl;
+
+    const image = new Image();
+
+    image.onload = () => {
+      freeHelloImagePreview.src = objectUrl;
+      freeHelloImagePreview.style.display = "block";
+
+      if (
+        image.naturalWidth === requiredWidth &&
+        image.naturalHeight === requiredHeight
+      ) {
+        freeHelloImageValid = true;
+        freeHelloImageStatus.textContent =
+          `✓ Correct image size: ${requiredWidth} × ${requiredHeight}px`;
+      } else {
+        freeHelloImageValid = false;
+        freeHelloImageStatus.textContent =
+          `✕ Wrong image size. Required ${requiredWidth} × ${requiredHeight}px. Your image is ${image.naturalWidth} × ${image.naturalHeight}px.`;
+      }
+    };
+
+    image.onerror = () => {
+      freeHelloImageValid = false;
+      freeHelloImagePreview.style.display = "none";
+      freeHelloImageStatus.textContent =
+        "✕ This file could not be read as an image.";
+    };
+
+    image.src = objectUrl;
+  });
+}
+
+async function uploadFreeHelloImage(session) {
+  const file = freeHelloImageFile?.files?.[0];
+
+  if (!file) {
+    return document.getElementById("freeHelloImageUrl")?.value.trim() || "";
+  }
+
+  if (!freeHelloImageValid) {
+    throw new Error(
+      "Please upload artwork with the exact dimensions required for the selected space."
+    );
+  }
+
+  const extension = file.name.split(".").pop().toLowerCase() || "jpg";
+  const safeExtension = ["jpg", "jpeg", "png", "webp"].includes(extension)
+    ? extension
+    : "jpg";
+
+  const filename = `free-hello-${Date.now()}-${crypto.randomUUID()}.${safeExtension}`;
+  const path = `free-hellos/${filename}`;
+
+  const response = await fetch(
+    `${SUPABASE_URL}/storage/v1/object/adverts/${path}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        apikey: SUPABASE_PUBLISHABLE_KEY,
+        "Content-Type": file.type,
+        "x-upsert": "false",
+      },
+      body: file,
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Advert image upload failed:", errorText);
+    throw new Error("The advert image could not be uploaded.");
+  }
+
+  return `${SUPABASE_URL}/storage/v1/object/public/adverts/${path}`;
+}

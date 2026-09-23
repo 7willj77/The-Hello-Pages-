@@ -156,9 +156,15 @@
             <input id="freeHelloTagline" type="text">
           </label>
 
+          <label class="admin-image-upload">
+            ADVERT IMAGE
+            <input id="freeHelloImageFile" type="file" accept="image/jpeg,image/png,image/webp">
+            <small id="freeHelloImageStatus">Upload JPG, PNG or WebP artwork.</small>
+            <img id="freeHelloImagePreview" class="admin-image-preview" alt="Advert preview" style="display:none;">
+          </label>
           <label>
             IMAGE URL
-            <input id="freeHelloImageUrl" type="url" placeholder="Optional">
+            <input id="freeHelloImageUrl" type="url" placeholder="Optional fallback URL">
           </label>
 
           <label>

@@ -766,3 +766,37 @@ footer{padding:25px 7vw;border-top:1px solid var(--line);display:flex;justify-co
   background: #9b1c1c;
   color: #fff;
 }
+
+.admin-image-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-image-upload input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #c9c0ad;
+  background: #fffdf7;
+  font: inherit;
+  font-size: 13px;
+}
+
+.admin-image-upload small {
+  display: block;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #666;
+}
+
+.admin-image-preview {
+  display: block;
+  max-width: 320px;
+  max-height: 180px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid #c9c0ad;
+  background: #f4efe4;
+  padding: 4px;
+}
