@@ -22,7 +22,7 @@ async function loadAdverts() {
     .from("adverts")
     .select("id, business_name, website, telephone, tagline, image_url, width_squares, height_squares, page_number")
     .eq("status", "published")
-    .eq("payment_status", "paid")
+    .in("payment_status", ["paid", "free"])
     .order("created_at", { ascending: true });
 
   if (advertError) {

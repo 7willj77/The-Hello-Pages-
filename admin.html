@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Admin — The Hello Pages</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="admin-page">
+
+<header class="topbar">
+  <a href="index.html" class="logo">
+    <span class="logo-mark">H</span>
+    <span class="logo-copy">
+      <b>THE HELLO PAGES</b>
+      <small>THE UK'S DIGITAL BUSINESS DIRECTORY</small>
+    </span>
+  </a>
+
+  <nav class="main-nav">
+    <a href="index.html">HOME</a>
+    <a href="advertise.html">ADVERTISE</a>
+    <a href="account.html">MY ACCOUNT</a>
+    <a href="admin.html" class="active">MY ADMIN</a>
+  </nav>
+
+  <a href="advertise.html" class="nav-buy">BUY SPACE</a>
+</header>
+
+<main class="admin-main">
+
+  <section class="admin-header">
+    <div>
+      <p class="kicker">THE HELLO PAGES / ADMIN</p>
+      <h1>My Admin.</h1>
+      <p>Welcome to the control room. Here's what's happening across the directory.</p>
+    </div>
+  </section>
+
+  <section id="adminLoading" class="admin-panel">
+    <p class="kicker">LOADING</p>
+    <h2>Opening the control room.</h2>
+    <p>We're checking your administrator access.</p>
+  </section>
+
+  <section id="adminError" class="admin-panel admin-error" style="display:none;">
+    <p class="kicker">ACCESS</p>
+    <h2>Administrator access required.</h2>
+    <p id="adminErrorMessage">You don't have permission to view this area.</p>
+    <a href="account.html" class="button light">GO TO MY ACCOUNT</a>
+  </section>
+
+  <div id="adminContent" style="display:none;">
+
+    <section class="admin-stats">
+      <article>
+        <span>TOTAL ADVERTS</span>
+        <strong id="statTotal">0</strong>
+      </article>
+
+      <article>
+        <span>PAID</span>
+        <strong id="statPaid">0</strong>
+      </article>
+
+      <article>
+        <span>PUBLISHED</span>
+        <strong id="statPublished">0</strong>
+      </article>
+
+      <article>
+        <span>PENDING</span>
+        <strong id="statPending">0</strong>
+      </article>
+
+      <article class="admin-revenue">
+        <span>REVENUE</span>
+        <strong id="statRevenue">£0.00</strong>
+      </article>
+    </section>
+
+    <section class="admin-panel admin-free-hello-panel">
+      <div class="admin-section-heading">
+        <div>
+          <p class="kicker">PROMOTION</p>
+          <h2>Free Hellos.</h2>
+          <p>15 free advertising spaces available for promotional use.</p>
+        </div>
+        <button type="button" id="createFreeHelloButton" class="button">
+          CREATE FREE HELLO
+        </button>
+      </div>
+
+      <div class="admin-free-hello-grid">
+        <article class="admin-free-hello-tier">
+          <span>SEMI-PREMIUM</span>
+          <strong id="freeHelloSemiRemaining">0</strong>
+          <small>
+            <b id="freeHelloSemiUsed">0</b> used of
+            <b id="freeHelloSemiTotal">5</b>
+          </small>
+        </article>
+
+        <article class="admin-free-hello-tier">
+          <span>STANDARD</span>
+          <strong id="freeHelloStandardRemaining">0</strong>
+          <small>
+            <b id="freeHelloStandardUsed">0</b> used of
+            <b id="freeHelloStandardTotal">10</b>
+          </small>
+        </article>
+      </div>
+    </section>
+
+    <section id="freeHelloCreator" class="admin-panel admin-free-hello-creator" style="display:none;">
+      <div class="admin-section-heading">
+        <div>
+          <p class="kicker">PROMOTION / CREATE</p>
+          <h2>Create a Free Hello.</h2>
+          <p>Create and publish a promotional advert directly into the directory.</p>
+        </div>
+        <button type="button" id="cancelFreeHelloButton" class="button light">
+          CANCEL
+        </button>
+      </div>
+
+      <form id="freeHelloForm">
+        <div class="admin-form-grid">
+          <label>
+            BUSINESS NAME
+            <input id="freeHelloBusinessName" type="text" required>
+          </label>
+
+          <label>
+            CUSTOMER ACCOUNT EMAIL
+            <input id="freeHelloCustomerEmail" type="email" placeholder="Optional — links advert to My Account">
+          </label>
+
+          <label>
+            ADVERT EMAIL
+            <input id="freeHelloEmail" type="email" required>
+          </label>
+
+          <label>
+            WEBSITE
+            <input id="freeHelloWebsite" type="url" placeholder="https://">
+          </label>
+
+          <label>
+            TELEPHONE
+            <input id="freeHelloTelephone" type="tel">
+          </label>
+
+          <label>
+            TAGLINE
+            <input id="freeHelloTagline" type="text">
+          </label>
+
+          <label>
+            IMAGE URL
+            <input id="freeHelloImageUrl" type="url" placeholder="Optional">
+          </label>
+
+          <label>
+            PAGE
+            <select id="freeHelloPage" required>
+              <option value="">Choose a page...</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="admin-free-hello-builder">
+          <div class="admin-free-hello-builder-header">
+            <div>
+              <p class="kicker">SPACE SELECTION</p>
+              <h3 id="freeHelloTierLabel">Choose a page</h3>
+              <p id="freeHelloSelectionSummary">Select at least 3 adjoining squares.</p>
+            </div>
+
+            <div class="admin-free-hello-selection-meta">
+              <span>SELECTED</span>
+              <strong id="freeHelloSquareCount">0</strong>
+              <small id="freeHelloDimensions">0 × 0 squares</small>
+            </div>
+          </div>
+
+          <div id="freeHelloGrid" class="admin-free-hello-grid-selector"></div>
+        </div>
+
+        <div class="admin-free-hello-actions">
+          <button type="submit" id="publishFreeHelloButton" class="button">
+            CREATE &amp; PUBLISH FREE HELLO
+          </button>
+          <span id="freeHelloFormMessage" class="admin-form-message"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="admin-panel">
+      <div class="admin-section-heading">
+        <div>
+          <p class="kicker">ADVERTISING</p>
+          <h2>All adverts.</h2>
+        </div>
+        <input id="adminSearch" type="search" placeholder="Search businesses...">
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>BUSINESS</th>
+              <th>PAGE</th>
+              <th>SIZE</th>
+              <th>SQUARES</th>
+              <th>AMOUNT</th>
+              <th>DIRECTORY AGE</th>
+              <th>PAYMENT</th>
+              <th>STATUS</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody id="advertTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+</main>
+
+<footer>
+  <b>THE HELLO PAGES</b>
+  <div>
+    <span>ADMIN</span>
+    <span>2026 / 27 EDITION</span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="admin.js"></script>
+
+</body>
+</html>

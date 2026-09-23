@@ -250,6 +250,7 @@ Deno.serve(async (req) => {
         {
           payment_status: "paid",
           status: "published",
+          published_at: new Date().toISOString(),
         }
       );
 
