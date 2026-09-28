@@ -507,3 +507,23 @@ function initCustomerAdvertHover() {
 }
 
 initCustomerAdvertHover();
+
+/* Live site view counter */
+async function incrementSiteViewCounter() {
+  const counter = document.getElementById("siteViewCount");
+  if (!counter || typeof supabaseClient === "undefined") return;
+
+  try {
+    const { data, error } = await supabaseClient.rpc("increment_site_view_count");
+
+    if (error) throw error;
+
+    if (typeof data === "number" || typeof data === "string") {
+      counter.textContent = Number(data).toLocaleString("en-GB");
+    }
+  } catch (error) {
+    console.error("Unable to update site view counter:", error);
+  }
+}
+
+incrementSiteViewCounter();

@@ -879,3 +879,41 @@ footer{padding:25px 7vw;border-top:1px solid var(--line);display:flex;justify-co
   opacity: 1;
 }
 
+
+/* Live Hello Pages view counter */
+.site-view-counter {
+  position: absolute;
+  top: 158px;
+  right: 23vw;
+  text-align: center;
+  transform: rotate(-1deg);
+  z-index: 2;
+}
+
+.site-view-counter strong {
+  display: block;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(38px, 4vw, 62px);
+  font-weight: 400;
+  line-height: .9;
+  letter-spacing: -2px;
+}
+
+.site-view-counter span {
+  display: block;
+  margin-top: 8px;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 2.2px;
+  color: var(--red);
+}
+
+@media (max-width: 900px) {
+  .site-view-counter {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin: 28px auto 0;
+    transform: none;
+  }
+}
