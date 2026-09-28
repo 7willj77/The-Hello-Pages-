@@ -839,3 +839,43 @@ footer{padding:25px 7vw;border-top:1px solid var(--line);display:flex;justify-co
 .customer-ad.customer-ad-small img {
   object-fit: cover;
 }
+
+/* Admin Free Hello square selector */
+.free-hello-square-grid {
+  display: grid;
+  grid-template-columns: repeat(15, 37px);
+  grid-auto-rows: 37px;
+  gap: 3px;
+  width: max-content;
+  min-width: max-content;
+  margin-top: 10px;
+}
+
+.free-hello-square {
+  width: 37px;
+  height: 37px;
+  min-width: 37px;
+  min-height: 37px;
+  box-sizing: border-box;
+  padding: 0;
+  border: 1px solid #cfc3aa;
+  background: #faf4e7;
+  cursor: pointer;
+}
+
+.free-hello-square:hover {
+  border-color: #806f45;
+}
+
+.free-hello-square.selected {
+  background: #f4c400;
+  border-color: #111;
+}
+
+.free-hello-square.unavailable {
+  background: #bdb5a6;
+  border-color: #999;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
