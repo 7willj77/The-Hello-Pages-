@@ -1,5 +1,14 @@
 /* THE HELLO PAGES — 50 page directory viewer */
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 const totalPages = 50;
 let page = 1;
 let mobilePage = 1;
@@ -189,6 +198,16 @@ function customerAd(ad) {
     grid-row: ${ad.row + 1} / span ${ad.height};
   `;
 
+  const squareCount = Number(ad.width || 0) * Number(ad.height || 0);
+
+  let sizeClass = "customer-ad-large";
+
+  if (squareCount <= 5) {
+    sizeClass = "customer-ad-small";
+  } else if (squareCount <= 8) {
+    sizeClass = "customer-ad-medium";
+  }
+
   const inner = ad.image
     ? `<img src="${ad.image}" alt="${ad.name}">`
     : `
@@ -202,12 +221,17 @@ function customerAd(ad) {
 
   return `
     <a
-      class="customer-ad"
+      class="customer-ad ${sizeClass}"
       style="${style}"
       href="${ad.website || "#"}"
       target="_blank"
       rel="noopener noreferrer"
       aria-label="${ad.name}"
+      data-ad-name="${escapeHtml(ad.name)}"
+      data-ad-tagline="${escapeHtml(ad.tagline || "")}"
+      data-ad-telephone="${escapeHtml(ad.telephone || "")}"
+      data-ad-website="${escapeHtml(ad.website || "")}"
+      data-ad-image="${escapeHtml(ad.image || "")}"
     >
       ${inner}
     </a>
@@ -412,3 +436,74 @@ document.addEventListener("mousemove", event => {
   housePreview.style.left = `${Math.max(10, x)}px`;
   housePreview.style.top = `${Math.max(10, y)}px`;
 });
+
+function initCustomerAdvertHover() {
+  let preview = document.getElementById("customerAdvertHover");
+
+  if (!preview) {
+    preview = document.createElement("div");
+    preview.id = "customerAdvertHover";
+    preview.className = "customer-ad-hover";
+    document.body.appendChild(preview);
+  }
+
+  document.querySelectorAll(".customer-ad").forEach(ad => {
+    ad.addEventListener("mouseenter", () => {
+      const name = ad.dataset.adName || "";
+      const tagline = ad.dataset.adTagline || "";
+      const telephone = ad.dataset.adTelephone || "";
+      const website = ad.dataset.adWebsite || "";
+      const image = ad.dataset.adImage || "";
+
+      preview.innerHTML = `
+        ${
+          image
+            ? `<img src="${image}" alt="${name}">`
+            : `<div class="customer-ad-hover-name">${name}</div>`
+        }
+        <div class="customer-ad-hover-details">
+          <strong>${name}</strong>
+          ${tagline ? `<span>${tagline}</span>` : ""}
+          ${
+            telephone
+              ? `<small>${telephone}</small>`
+              : ""
+          }
+          ${
+            website
+              ? `<small>${website.replace(/^https?:\/\//, "")}</small>`
+              : ""
+          }
+        </div>
+      `;
+
+      preview.classList.add("visible");
+    });
+
+    ad.addEventListener("mousemove", event => {
+      const offset = 18;
+      const previewWidth = preview.offsetWidth || 280;
+      const previewHeight = preview.offsetHeight || 180;
+
+      let left = event.clientX + offset;
+      let top = event.clientY + offset;
+
+      if (left + previewWidth > window.innerWidth - 10) {
+        left = event.clientX - previewWidth - offset;
+      }
+
+      if (top + previewHeight > window.innerHeight - 10) {
+        top = event.clientY - previewHeight - offset;
+      }
+
+      preview.style.left = `${Math.max(10, left)}px`;
+      preview.style.top = `${Math.max(10, top)}px`;
+    });
+
+    ad.addEventListener("mouseleave", () => {
+      preview.classList.remove("visible");
+    });
+  });
+}
+
+initCustomerAdvertHover();

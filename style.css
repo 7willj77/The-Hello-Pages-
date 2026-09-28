@@ -800,3 +800,42 @@ footer{padding:25px 7vw;border-top:1px solid var(--line);display:flex;justify-co
   background: #f4efe4;
   padding: 4px;
 }
+
+/* Small customer adverts — keep the directory clean */
+.customer-ad.customer-ad-small .customer-ad-text {
+  padding: 2px 4px;
+  gap: 0;
+  justify-content: center;
+  align-items: center;
+}
+
+.customer-ad.customer-ad-small .customer-ad-text strong {
+  display: block;
+  width: 100%;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(9px, 1vw, 16px);
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.customer-ad.customer-ad-small .customer-ad-text span,
+.customer-ad.customer-ad-small .customer-ad-text small {
+  display: none;
+}
+
+/* Medium adverts can show the name and tagline */
+.customer-ad.customer-ad-medium .customer-ad-text small {
+  display: none;
+}
+
+/* Larger adverts can show the complete business card */
+.customer-ad.customer-ad-large .customer-ad-text {
+  padding: clamp(6px, 0.8vw, 12px);
+}
+
+/* Don't let tiny uploaded artwork dominate the directory */
+.customer-ad.customer-ad-small img {
+  object-fit: cover;
+}
